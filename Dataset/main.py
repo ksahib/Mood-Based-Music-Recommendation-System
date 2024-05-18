@@ -60,20 +60,24 @@ def extract_playlist_features(playlist_id):
 
     track_features = []
     track_ids = []
+    track_names = []
+    artist_names = []
     for item in playlist['items']:
         if item['track'] is not None:
             track_id = item['track']['id']
             track_ids.append(track_id)
+            track_names.append(item['track']['name'])
+            artists = [artist['name'] for artist in item['track']['artists']]
+            artist_names.append(', '.join(artists))
 
     # Get audio features with backoff
     if track_ids:
         features = get_audio_features_with_backoff(track_ids)
-        for item, feature in zip(playlist['items'], features):
-            if item['track'] is not None:
-                track_name = item['track']['name']
-                if feature is not None:  # Check if feature is not None
-                    feature['track_name'] = track_name
-                    track_features.append(feature)
+        for track_name, artist_name, feature in zip(track_names, artist_names, features):
+            if feature is not None:  # Check if feature is not None
+                feature['track_name'] = track_name
+                feature['artist_name'] = artist_name
+                track_features.append(feature)
 
     return track_features
 
@@ -86,7 +90,7 @@ def write_to_csv(audio_features, file_path):
     file_exists = os.path.exists(file_path)
 
     df = pd.DataFrame(audio_features)
-    columns = ['track_name'] + [col for col in df.columns if col != 'track_name']
+    columns = ['track_name', 'artist_name'] + [col for col in df.columns if col not in ['track_name', 'artist_name']]
     df = df[columns]
 
     # Determine whether to include the header in the CSV file
@@ -103,6 +107,7 @@ def convert_csv_to_txt(csv_file_path, txt_file_path, columns_to_write):
         lines = csv_file.readlines()
         header = lines[0].strip().split(',')  # Extract column names from CSV header
         track_name_index = header.index('track_name')
+        artist_name_index = header.index('artist_name')
         columns = [header.index(col) for col in columns_to_write]
 
         # Remove header line and iterate over remaining lines
@@ -111,8 +116,9 @@ def convert_csv_to_txt(csv_file_path, txt_file_path, columns_to_write):
             for line in lines:
                 values = line.strip().split(',')
                 track_name = values[track_name_index]
+                artist_name = values[artist_name_index]
                 feature_values = ' '.join(values[i] for i in columns)
-                txt_line = f"{track_name}, {feature_values}\n"
+                txt_line = f"{track_name} by {artist_name}, {feature_values}\n"
                 txt_file.write(txt_line)
 
 
