@@ -203,7 +203,43 @@ void bronKerboschPivot(const graph& g,
     }
 }
 
+bool fileExists(const std::string &filename)
+{
+    std::ifstream file(filename);
+    return file.good();
+}
+
 int main() {
+    std::cout << "Checking preliminaries..." << std::endl;
+    std::string files[5] = {"graph0.txt", "graph1.txt", "graph2.txt", "graph3.txt", "graph4.txt"};
+    for(unsigned i = 0; i < 5; i++)
+    {
+        if(!fileExists(files[i]))
+        {
+            std::cout << "File: " << files[i] << " does not exist!" << std::endl;
+            std::cout << "Attempting to compile file..." << std::endl;
+            int compile_status = system("g++ createedgelist.cpp -o createedgelist");
+            if(compile_status == 0)
+            {
+                int run_status = system("createedgelist " + i);
+                if(run_status == 0)
+                {
+                    std::cout << "File: " << files[i] << " created!" << std::endl;
+                }
+                else{
+                    std::cerr << "Error: Failed to execute createedgelist program." << std::endl;
+                    return 1;
+                }
+            }
+            else 
+            {
+                std::cerr << "Error: Compilation of createedgelist.cpp failed." << std::endl;
+                return 1;
+            }
+            
+        }
+        
+    }
     graph g;
     buildGraph(g);
 

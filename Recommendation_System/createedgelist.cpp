@@ -137,9 +137,10 @@ void createEdgelist(graph &g, int mood) {
     file.close();
 }
 
-int main()
+int main(int argc, char **argv)
 {
     graph g;
     buildGraph(g);
-    createEdgelist(g,4);
+    unsigned mood = atoi(argv[1]);
+    createEdgelist(g,mood);
 }
