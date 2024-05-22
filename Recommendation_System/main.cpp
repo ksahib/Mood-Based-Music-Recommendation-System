@@ -178,14 +178,14 @@ void bronKerboschPivot(const graph& g,
         }
     }
 
-    std::unordered_set<int> P_pivot;
+    std::unordered_set<int> P_prime;
     for (int v : P) {
         if (neighbors(g, pivot).find(v) == neighbors(g, pivot).end()) {
-            P_pivot.insert(v);
+            P_prime.insert(v);
         }
     }
 
-    for (int v : P_pivot) {
+    for (int v : P_prime) {
         R.insert(v);
         std::unordered_set<int> N_v = neighbors(g, v);
         std::unordered_set<int> P_inter_Nv, X_inter_Nv;
