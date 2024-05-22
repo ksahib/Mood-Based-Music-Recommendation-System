@@ -7,7 +7,8 @@
 #include <unordered_set>
 #include <iterator>
 #include <iomanip>
-#include <locale>
+#include <set>
+#include <random>
 
 typedef struct {
     std::string name;
@@ -228,13 +229,13 @@ int main() {
                 }
                 else{
                     std::cerr << "Error: Failed to execute createedgelist program." << std::endl;
-                    return 1;
+                    return 0;
                 }
             }
             else 
             {
                 std::cerr << "Error: Compilation of createedgelist.cpp failed." << std::endl;
-                return 1;
+                return 0;
             }
             
         }
@@ -267,16 +268,26 @@ int main() {
 
     std::vector<std::unordered_set<int>> cliques;
     bronKerboschPivot(g, R, P, X, cliques);
-
-    // Debug: Print cliques
-    std::cout << "Maximal Cliques:" << std::endl;
-    for (const auto &clique : cliques) {
-        std::cout << "{ ";
-        for (const auto &node : clique) {
-            std::cout << g.nodes[node].name << '-' << g.nodes[node].artist;
+    std::set<int> tracks;
+    for(auto &x: cliques)
+    {
+        for(auto &y: x)
+        {
+            tracks.insert(y);
         }
-        std::cout << "}" << std::endl;
+    }
+    std::vector<int> tracks_vec(tracks.begin(), tracks.end());
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dis(0, g.n()-1);
+    std::cout << "Here are your recommended songs..." << std::endl;
+    for(unsigned i = 0; i < 5; i++)
+    {
+        int index = dis(gen);
+        std::cout << g.nodes[tracks_vec[index]].name << "-" << g.nodes[tracks_vec[index]].artist << std::endl;
     }
 
+
+    
     return 0;
 }
