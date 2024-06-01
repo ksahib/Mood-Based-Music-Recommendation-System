@@ -8,6 +8,7 @@
 #include <iterator>
 #include <iomanip>
 #include <set>
+#include <chrono>
 #include <random>
 
 typedef struct {
@@ -74,9 +75,13 @@ void buildGraph(graph &g) {
                 n.valence = std::stod(valence);
                 g.nodes.push_back(n);
             } catch (const std::invalid_argument &e) {
-                std::cerr << "Invalid argument: " << e.what() << " in line: " << line << std::endl;
+                std::ofstream file;
+                file.open("error-log.txt");
+                file << "Invalid argument: " << e.what() << " in line: " << line << std::endl;
             } catch (const std::out_of_range &e) {
-                std::cerr << "Out of range: " << e.what() << " in line: " << line << std::endl;
+                std::ofstream file;
+                file.open("error-log.txt");
+                file << "Out of range: " << e.what() << " in line: " << line << std::endl;
             }
         }
     }
@@ -222,7 +227,9 @@ int main() {
             int compile_status = system("g++ createedgelist.cpp -o createedgelist");
             if(compile_status == 0)
             {
-                int run_status = system("createedgelist " + i);
+                std::ostringstream command;
+                command << "createedgelist " << i;
+                int run_status = system(command.str().c_str());
                 if(run_status == 0)
                 {
                     std::cout << "File: " << files[i] << " created!" << std::endl;
@@ -237,7 +244,29 @@ int main() {
                 std::cerr << "Error: Compilation of createedgelist.cpp failed." << std::endl;
                 return 0;
             }
-            
+        }
+        if(!fileExists("fusedGraph.txt"))
+        {
+            std::cout << "File: fusedGraph.txt not found" << std::endl;
+            std::cout << "Fusing Graphs....." << std::endl;
+            int compile_status = system("g++ graph_fusion.cpp -o graph_fusion");
+            if(compile_status == 0)
+            {
+                int run_status = system("graph_fusion ");
+                if(run_status == 0)
+                {
+                    std::cout << "File: fusedGraph.txt created!" << std::endl;
+                }
+                else{
+                    std::cerr << "Error: Failed to execute graph_fusion program." << std::endl;
+                    return 0;
+                }
+            }
+            else 
+            {
+                std::cerr << "Error: Compilation of graph_fusion.cpp failed." << std::endl;
+                return 0;
+            }
         }
         
     }
@@ -277,17 +306,24 @@ int main() {
         }
     }
     std::vector<int> tracks_vec(tracks.begin(), tracks.end());
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dis(0, g.n()-1);
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::mt19937 gen(seed);
     std::cout << "Here are your recommended songs..." << std::endl;
     for(unsigned i = 0; i < 5; i++)
     {
+        std::uniform_int_distribution<int> dis(0, g.n()-1);
         int index = dis(gen);
+        std::vector<int> prev(5);
+        prev.push_back(index);
+        // for(auto &x: prev)
+        // {
+        //     if(index == x)
+        //     {
+        //         index = dis(gen);
+        //     }
+        // }
         std::cout << g.nodes[tracks_vec[index]].name << "-" << g.nodes[tracks_vec[index]].artist << std::endl;
     }
 
-
-    
     return 0;
 }
